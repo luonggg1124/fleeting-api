@@ -6,9 +6,9 @@ import {
 } from "typeorm";
 import { User } from "./User";
 
-@Entity("blocked_users")
-export class BlockedUser {
-  @PrimaryGeneratedColumn("uuid")
+@Entity("blocks")
+export class Block {
+  @PrimaryGeneratedColumn("increment")
   id!: string;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })

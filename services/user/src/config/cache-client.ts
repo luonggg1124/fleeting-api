@@ -7,39 +7,40 @@ const packageDefinition = protoLoader.loadSync(
 );
 const cacheProto: any = grpc.loadPackageDefinition(packageDefinition).cache;
 
-const cacheClient = new cacheProto.CacheService(
-  process.env.CACHE_SERVER_URL,
-  grpc.credentials.createInsecure()
-);
-cacheClient.get = (key: string): Promise<any> => {
-  return new Promise((resolve, reject) => {
-    cacheClient.GetCache({ key: key }, (error: any, response: any) => {
-      if (error) return reject(error);
-      resolve(response.value ? JSON.parse(response.value) : null);
+export class CacheClient {
+  private client;
+  constructor() {
+    this.client = new cacheProto.CacheService(
+      process.env.CACHE_SERVER_URL,
+      grpc.credentials.createInsecure()
+    );
+  }
+  async get(key: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.client.GetCache({ key: key }, (error: any, response: any) => {
+        if (error) return reject(error);
+        resolve(response.value ? JSON.parse(response.value) : null);
+      });
     });
-  });
-};
-cacheClient.set = (
-  key: string,
-  data: any,
-  ttl: number = 300
-): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    cacheClient.SetCache(
-      { key: key, value: JSON.stringify(data), ttl },
-      (error: any, response: any) => {
+  }
+  async setex(key: string, data: any, ttl: number = 300): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.client.SetCache(
+        { key: key, value: JSON.stringify(data), ttl },
+        (error: any, response: any) => {
+          if (error) return reject(error);
+          resolve();
+        }
+      );
+    });
+  }
+  async del(key:string): Promise<void>{
+    return new Promise((resolve, reject) => {
+      this.client.DeleteCache({ key: key }, (error: any) => {
         if (error) return reject(error);
         resolve();
-      }
-    );
-  });
-};
-cacheClient.del = (key: string): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    cacheClient.DeleteCache({ key: key }, (error: any) => {
-      if (error) return reject(error);
-      resolve();
+      });
     });
-  });
-};
-export default cacheClient;
+  }
+}
+

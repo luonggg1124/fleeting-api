@@ -1,26 +1,67 @@
-import { body } from "express-validator";
+import { NextFunction, Request, Response } from "express";
+import { body, validationResult } from "express-validator";
 
+export const sendVerificationCodeRequest = [
+  body("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .bail()
+    .isEmail()
+    .withMessage("Invalid email"),
+  (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        errors: errors.array(),
+      });
+      return;
+    }
+    next();
+  },
+];
 export const registerRequest = [
   body("email")
-    .isEmpty()
+    .notEmpty()
     .withMessage("Email is required")
+    .bail()
     .isEmail()
     .withMessage("Invalid email."),
   body("password")
-    .isEmpty()
+    .notEmpty()
     .withMessage("Password is required")
+    .bail()
     .isLength({ min: 8 })
     .withMessage("Password must be at least 8 characters long.")
+    .bail()
     .isString()
     .withMessage("Password must be a string."),
   body("givenName")
-    .isEmpty()
+    .notEmpty()
     .withMessage("Given name is required.")
+    .bail()
     .isString()
-    .withMessage("Given name must be a string."),
+    .withMessage("Given name must be a string.")
+    .bail(),
   body("familyName")
-    .isEmpty()
+    .notEmpty()
     .withMessage("Family name is required")
+    .bail()
     .isString()
     .withMessage("Family name must be a string."),
+  body("verificationCode")
+    .notEmpty()
+    .withMessage("Verification code is required")
+    .bail()
+    .isString()
+    .withMessage("Verification code must be a string"),
+  (req: Request, res: Response, next: NextFunction) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({
+        errors: errors.array(),
+      });
+      return;
+    }
+    next();
+  },
 ];

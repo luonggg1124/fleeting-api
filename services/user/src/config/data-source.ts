@@ -3,7 +3,6 @@ import dotenv from "dotenv";
 
 
 
-
 dotenv.config();
 
 export const AppDataSource = new DataSource({
@@ -12,8 +11,9 @@ export const AppDataSource = new DataSource({
   ssl: {
     rejectUnauthorized: false
   },  
-  synchronize: true, //false in production
+  synchronize: false, 
   logging: true,
   entities: ["./src/models/entities/**/*.ts"],
   migrations: ['./src/models/migrations/**/*.ts'],
+  subscribers: ["./src/models/subscribers/**/*.ts"],
 });

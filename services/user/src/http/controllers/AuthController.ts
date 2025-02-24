@@ -11,13 +11,20 @@ class AuthController {
   }
   register = async (req: Request, res: Response): Promise<void> => {
     try {
-      //const errors = validationResult(req);
-      const result = this.authService.register(req.body.email);
-      res.json(result);
+      
+      const result = await this.authService.register(req.body);
+      res.json({
+        user : result
+      });
       return;
     } catch (error: any) {
-      console.log(error);
-
+      
+      if(error?.message){
+        res.status(500).json({
+          message: error.message
+        });
+        return;
+      }
       res.status(500).json({
         message: "Internal Server Error.",
       });

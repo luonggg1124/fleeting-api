@@ -1,19 +1,34 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, Unique } from "typeorm";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  CreateDateColumn,
+  Unique,
+  Index,
+  Column,
+} from "typeorm";
 import { User } from "./User";
 
+@Entity("follows")
+@Index(["followerId", "following"], { unique: true })
+export class Follow {
+  @PrimaryGeneratedColumn("increment")
+  id!: string;
 
-@Entity("user_followers")
-@Unique(["follower","following"])
-export class UserFollower{
-    @PrimaryGeneratedColumn("uuid")
-    id!: string;
+  @Column()
+  @Index()
+  followerId: number;
 
-    @ManyToOne(() => User,{onDelete: "CASCADE"})
-    follower!: User;
+  @Column()
+  @Index()
+  followingId: number;
 
-    @ManyToOne(() => User, { onDelete: "CASCADE" })
-    following!: User;
+  @ManyToOne(() => User, (user) => user.followers)
+  follower: User;
 
-    @CreateDateColumn()
-    createdAt!: Date;
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
+  following: User;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

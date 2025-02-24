@@ -7,9 +7,9 @@ import {
 } from "typeorm";
 import { User } from "./User";
 
-@Entity("user_activity_logs")
+@Entity("activity_logs")
 export class UserActivityLog {
-  @PrimaryGeneratedColumn("uuid")
+  @PrimaryGeneratedColumn("increment")
   id!: string;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
