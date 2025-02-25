@@ -7,11 +7,9 @@ import { CacheClient } from "../config/cache-client";
 import { BadRequestException } from "../exceptions/BadRequestException";
 import { QueryRunner } from "typeorm";
 import { AppDataSource } from "../config/data-source";
-
-import { User } from "../models/entities/User";
+import { Request } from "express";
 export class AuthService {
   private userRepository: UserRepository;
-
   private cache;
   private queryRunner: QueryRunner;
   constructor(
@@ -51,36 +49,30 @@ export class AuthService {
     );
     return { accessToken, refreshToken };
   };
-  async sendVerificationCode(email: string) {
-    const [existingUser, existingCode] = await Promise.all([
-      this.userRepository.findByEmail(email),
-      this.cache.get(`verificationCode:${email}`),
-    ]);
+  async sendVerificationCode(req: Request):Promise<void> {
+    const email = req.body.email as string;
+    const userCacheKey = this.userRepository.getCacheKey();
+    const existingUser = await this.userRepository.emailExisted(email);
     if (existingUser) {
       throw new ConflictException("User already exists.");
     }
     const code = randomNumberString(6);
-    if (existingCode) {
-      await this.cache.del(`verificationCode:${email}`);
-    }
-    await this.cache.setex(`verificationCode:${email}`, code, 60 * 5);
+    await this.cache.setex(`${userCacheKey.verificationCode}:${email}`, code, 60 * 5);
     sendVerificationCodeMail(code, email);
   }
-  async register(data: {
-    email: string;
-    password: string;
-    givenName: string;
-    familyName: string;
-    verificationCode: string;
-  }) {
+  async register(req: Request) {
+    const data = req.body;
+    const userCacheKey = this.userRepository.getCacheKey();
     if(await this.userRepository.emailExisted(data.email)){
       throw new ConflictException("Email already exists.");
     }
-    // const correctVerificationCode = await this.cache.get(
-    //   `verificationCode:${data.email}`
-    // );
-    return 1;
-    const user = await this.userRepository.insert({
+    const correctVerificationCode = await this.cache.get(
+      `${userCacheKey.verificationCode}:${data.email}`
+    );
+    if(JSON.stringify(correctVerificationCode) !== JSON.stringify(data.verificationCode)){
+      throw new BadRequestException("Invalid verification code.");
+    }
+    const {identifiers} = await this.userRepository.insert({
       username:await this.userRepository.createUserName(data.givenName,data.familyName),
       email: data.email,
       password: await this.userRepository.hashPassword(data.password),
@@ -97,7 +89,7 @@ export class AuthService {
         theme: "light"
       }
     });
+    const {accessToken, refreshToken} = this.generateToken(identifiers[0].id as string);
     
-    return user;
   }
 }

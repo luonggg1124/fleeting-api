@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
-
-import { validationResult } from "express-validator";
 import { AuthService } from "../../services/AuthService";
 import { ConflictException } from "../../exceptions/ConflictException";
+
+// arrowFunction luôn giữ this của class.
+// normalFunction bị mất this khi gọi trực tiếp.
 
 class AuthController {
   private authService: AuthService;
@@ -12,7 +13,7 @@ class AuthController {
   register = async (req: Request, res: Response): Promise<void> => {
     try {
       
-      const result = await this.authService.register(req.body);
+      const result = await this.authService.register(req);
       res.json({
         user : result
       });
@@ -40,7 +41,7 @@ class AuthController {
         });
         return;
       }
-      await this.authService.sendVerificationCode(email);
+      await this.authService.sendVerificationCode(req);
       res.json({
         message: "Verification code already sent to your mail.",
       });

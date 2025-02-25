@@ -4,22 +4,41 @@ import { User } from "../entities/User";
 import { AppDataSource } from "../../config/data-source";
 import { lowercaseString, randomString } from "../../utils/string";
 import { CacheClient } from "../../config/cache-client";
+import { randomNumberString } from "../../utils/number";
 
+interface CacheKey {
+  emailExisted: string;
+  verificationCode: string;
+}
 export class UserRepository extends Repository<User> {
   public manager:EntityManager;
   private cache:CacheClient;
+  private cacheKey:CacheKey;
   constructor(
     manager: EntityManager = AppDataSource.manager,
     cache: CacheClient = new CacheClient()
   ) {
     super(User, manager);
     this.cache = cache;
+    this.cacheKey = {
+      emailExisted: "email_existed",
+      verificationCode: "verification_code"
+    }
   }
   async emailExisted(email:string):Promise<boolean>{
-    return await this.exists({where: {email: email}});
+    const cache = await this.cache.get(`${this.cacheKey.emailExisted}:${email}`);
+    if(cache){
+      return true;
+    }
+
+    const db = await this.exists({where: {email: email}});
+    if(db){
+      this.cache.setex(`${this.cacheKey.emailExisted}:${email}`,db,60*60);
+    }
+    return db;
   }
-  async clearCache(){
-    
+  getCacheKey(){
+    return this.cacheKey;
   }
   async findByEmail(email:string): Promise<User | null> {
     return this.findOne({where:{email} });
@@ -41,8 +60,8 @@ export class UserRepository extends Repository<User> {
     if(!familyName){
       familyName = randomString(Math.floor(Math.random() * 10));
     }
-    const username = `${lowercaseString(givenName)}.${lowercaseString(familyName)}`;
-    if(await this.findByUserName(username)){
+    const username = `${lowercaseString(givenName)}${lowercaseString(familyName)}.${randomNumberString(Math.random() * 10)}`;
+    if(await this.exists({where:{username} })){
       return await this.createUserName(givenName, familyName);
     }
     return username;

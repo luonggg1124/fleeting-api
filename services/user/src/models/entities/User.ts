@@ -11,9 +11,8 @@ import {
 import { Follow } from "./Follow";
 import { Block } from "./Block";
 
+@Index(["email","username"],{unique:true})
 @Entity("users")
-
-@Index(["email","username"],{unique: true})
 export class User {
   @PrimaryGeneratedColumn("increment")
   id: string;
@@ -36,7 +35,11 @@ export class User {
   @Column({ default: false })
   isBanned: boolean;
 
-  @Column({ type: "jsonb", nullable:true })
+  @Column({ type: "jsonb", nullable:true, default: {
+    allowMessages: true,
+    showOnlineStatus: true,
+    theme: "light"
+  } })
   settings: {
     allowMessages: boolean;
     showOnlineStatus: boolean;
