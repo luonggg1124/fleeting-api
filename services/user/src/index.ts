@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import express, {  Request, Response } from "express";
 import dotenv from "dotenv";
-import { AppDataSource } from "./config/data-source";
+import AppDataSource from "./config/data-source";
 import authRoutes from "./routes/v1/auth.route";
-import helmet from "helmet";
+// import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import compression from "compression";
 
@@ -17,10 +17,10 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 app.use(express.json());
-app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginResourcePolicy: {policy:"cross-origin"}
-}));
+// app.use(helmet({
+//     contentSecurityPolicy: false,
+//     crossOriginResourcePolicy: {policy:"cross-origin"}
+// }));
 
 
 
@@ -40,4 +40,3 @@ AppDataSource.initialize().then(() => {
 }).catch((error:any) => {
     console.error('Database connection error:', error);
 });
-

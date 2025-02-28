@@ -1,33 +1,35 @@
 import { EntityManager, Repository } from "typeorm";
 import bcrypt from "bcryptjs";
 import { User } from "../entities/User";
-import { AppDataSource } from "../../config/data-source";
+import AppDataSource from "../../config/data-source";
 import { lowercaseString, randomString } from "../../utils/string";
 import { CacheClient } from "../../config/cache-client";
 import { randomNumberString } from "../../utils/number";
 
-interface CacheKey {
-  emailExisted: string;
-  verificationCode: string;
-}
+
 export class UserRepository extends Repository<User> {
   public manager:EntityManager;
   private cache:CacheClient;
-  private cacheKey:CacheKey;
+ 
   constructor(
     manager: EntityManager = AppDataSource.manager,
     cache: CacheClient = new CacheClient()
   ) {
     super(User, manager);
     this.cache = cache;
-    this.cacheKey = {
+    
+  }
+  get cacheKey(){
+    return {
       emailExisted: "email_existed",
-      verificationCode: "verification_code"
+      verificationCode: "verification_code",
+      accessToken: "access_token",
+      refreshToken: "refresh_token",
     }
   }
   async emailExisted(email:string):Promise<boolean>{
-    const cache = await this.cache.get(`${this.cacheKey.emailExisted}:${email}`);
-    if(cache){
+   
+    if(await this.cache.get(`${this.cacheKey.emailExisted}:${email}`)){
       return true;
     }
 
@@ -37,9 +39,7 @@ export class UserRepository extends Repository<User> {
     }
     return db;
   }
-  getCacheKey(){
-    return this.cacheKey;
-  }
+ 
   async findByEmail(email:string): Promise<User | null> {
     return this.findOne({where:{email} });
   }

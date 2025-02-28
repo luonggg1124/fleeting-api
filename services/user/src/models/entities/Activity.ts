@@ -4,26 +4,28 @@ import {
   ManyToOne,
   Column,
   CreateDateColumn,
+  JoinColumn,
 } from "typeorm";
 import { User } from "./User";
 
 @Entity("activity_logs")
 export class UserActivityLog {
   @PrimaryGeneratedColumn("increment")
-  id!: string;
+  id: string | number;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
-  user!: User;
+  @JoinColumn({ name: "user_id" })
+  user: User;
 
   @Column()
-  action!: string;
+  action: string;
 
   @Column()
-  ipAddress!: string;
+  ip_address: string;
 
   @Column()
-  userAgent!: string;
+  user_agent: string;
 
   @CreateDateColumn()
-  createdAt!: Date;
+  created_at: Date;
 }

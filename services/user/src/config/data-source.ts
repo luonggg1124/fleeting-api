@@ -1,11 +1,8 @@
 import { DataSource } from "typeorm";
 import dotenv from "dotenv";
 
-
-
 dotenv.config();
-
-export const AppDataSource = new DataSource({
+export default new DataSource({
   type: "postgres",
   url: process.env.DB_URL,
   ssl: {
@@ -13,7 +10,12 @@ export const AppDataSource = new DataSource({
   },  
   synchronize: false, 
   logging: true,
-  entities: ["./src/models/entities/**/*.ts"],
-  migrations: ['./src/models/migrations/**/*.ts'],
-  subscribers: ["./src/models/subscribers/**/*.ts"],
+  entities: ["/src/models/entities/**/*.ts"],
+  migrations: ["/src/models/migrations/**/*.ts"],
+  subscribers: ["/src/models/subscribers/**/*.ts"],
+  extra: {
+    max: 10,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000, 
+  }
 });

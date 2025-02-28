@@ -5,68 +5,88 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-  OneToMany,
-
+  ManyToMany,
+  JoinTable,
 } from "typeorm";
-import { Follow } from "./Follow";
-import { Block } from "./Block";
 
-@Index(["email","username"],{unique:true})
+
+export type IProfile = {
+  avatar_url?: string;
+  given_name: string;
+  family_name: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+};
+export type ISettings = {
+  allow_messages: boolean;
+  show_online_status: boolean;
+  theme: string;
+};
+
 @Entity("users")
+@Index(["email", "username"], { unique: true })
 export class User {
   @PrimaryGeneratedColumn("increment")
-  id: string;
+  id: string|number;
 
-  @Column({ length: 100,unique: true })
+  @Column({ length: 100, unique: true })
   username: string;
 
-  @Column({ length: 255, unique:true })
+  @Column({ length: 255, unique: true })
   email: string;
 
   @Column({ length: 255, select: false })
   password: string;
 
-  @Column({ length: 255})
-  fullName: string;
+  @Column({ length: 255 })
+  full_name: string;
 
-  @Column({ default: false })
-  isVerified?: boolean;
+  @Column({ default: false,nullable:true })
+  is_verified?: boolean;
 
-  @Column({ default: false })
-  isBanned: boolean;
+  @Column({ default: false,nullable:true })
+  is_banned?: boolean;
 
-  @Column({ type: "jsonb", nullable:true, default: {
-    allowMessages: true,
-    showOnlineStatus: true,
-    theme: "light"
-  } })
-  settings: {
-    allowMessages: boolean;
-    showOnlineStatus: boolean;
-    theme: string;
-  }
-  @Column({type:"jsonb", nullable:true})
-  profile: {
-    avatarUrl?:string;
-    givenName:string;
-    familyName:string;
-    bio?:string;
-    location?: string;
-    website?:string;
-  }
+  @Column({
+    type: "jsonb",
+    default: {
+      allow_messages: true,
+      show_online_status: true,
+      theme: "light",
+    },
+  })
+  settings: ISettings;
+  @Column({ type: "jsonb"})
+  profile: IProfile;
 
-  @OneToMany(() => Follow, (follow) => follow.follower)
-  followers: Follow[];
+  @ManyToMany(() => User)
+  @JoinTable({
+    name: 'follows',
+    joinColumn: {name:'follower_id', referencedColumnName: "id"},
+    inverseJoinColumn: {name:'following_id',referencedColumnName: "id"}
+  })
+  followers: User[];
 
-  @OneToMany(() => Follow, (follow) => follow.following)
-  following: Follow[];
+  @ManyToMany(() => User)
+  @JoinTable({
+    name: 'follows',
+    joinColumn: {name:'following_id', referencedColumnName: "id"},
+    inverseJoinColumn: {name:'follower_id',referencedColumnName: "id"}
+  })
+  following: User[];
 
-  @OneToMany(() => Block, (block) => block.blocked)
-  blocked: Block[];
+  @ManyToMany(() => User)
+  @JoinTable({
+    name: 'blocks',
+    joinColumn: {name:'blocker_id', referencedColumnName: "id"},
+    inverseJoinColumn: {name:'blocked_id',referencedColumnName: "id"}
+  })
+  blocked: User[];
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updated_at: Date;
 }
