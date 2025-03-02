@@ -11,7 +11,7 @@ import { User } from "./User";
 @Entity("activity_logs")
 export class UserActivityLog {
   @PrimaryGeneratedColumn("increment")
-  id: string | number;
+  id: number;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })

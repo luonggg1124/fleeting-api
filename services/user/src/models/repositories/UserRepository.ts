@@ -2,9 +2,9 @@ import { EntityManager, Repository } from "typeorm";
 import bcrypt from "bcryptjs";
 import { User } from "../entities/User";
 import AppDataSource from "../../config/data-source";
-import { lowercaseString, randomString } from "../../utils/string";
 import { CacheClient } from "../../config/cache-client";
-import { randomNumberString } from "../../utils/number";
+import { lowercaseString, randomNumberString, randomString } from "@fleeting/shared-utils";
+
 
 
 export class UserRepository extends Repository<User> {
@@ -17,12 +17,12 @@ export class UserRepository extends Repository<User> {
   ) {
     super(User, manager);
     this.cache = cache;
-    
   }
   get cacheKey(){
     return {
       emailExisted: "email_existed",
       verificationCode: "verification_code",
+      limitIncorrectPasswordLogin: "limit_incorrect_password_login"
     }
   }
   async emailExisted(email:string):Promise<boolean>{

@@ -28,7 +28,7 @@ export type ISettings = {
 @Index(["email", "username"], { unique: true })
 export class User {
   @PrimaryGeneratedColumn("increment")
-  id: string|number;
+  id: number;
 
   @Column({ length: 100, unique: true })
   username: string;
@@ -36,7 +36,7 @@ export class User {
   @Column({ length: 255, unique: true })
   email: string;
 
-  @Column({ length: 255, select: false })
+  @Column({ length: 255 })
   password: string;
 
   @Column({ length: 255 })

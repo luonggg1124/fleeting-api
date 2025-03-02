@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { AuthService } from "../../services/AuthService";
-import ConflictException from "../../../../../package/exceptions/src/exceptions/ConflictException";
-import NotFoundException from "../../../../../package/exceptions/src/exceptions/NotFoundException";
+import { ConflictException, NotFoundException } from "@fleeting/shared-exceptions";
+
 
 // arrowFunction luôn giữ this của class.
 // normalFunction bị mất this khi gọi trực tiếp.
@@ -10,6 +10,13 @@ class AuthController {
   private authService: AuthService;
   constructor(authService: AuthService = new AuthService()) {
     this.authService = authService;
+  }
+  login = async(req:Request, res:Response) =>{
+      try {
+        
+      } catch (error:any) {
+        
+      }
   }
   register = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -66,10 +73,13 @@ class AuthController {
   };
   me = async (req: Request, res: Response): Promise<void> => {
     try {
+      const user = this.authService.me(req);
+      console.log(user);
+      
       res.json({
-        user: this.authService.me(req)
+        user:user 
       });
-      return
+      return;
     } catch (error: any) {
       if (error instanceof NotFoundException) {
         res.status(404).json({

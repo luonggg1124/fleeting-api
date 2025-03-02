@@ -7,11 +7,12 @@ import { Request } from "express";
 
 import { UserDto } from "../models/dto/UserDto";
 
-import { AuthenticatedRequest } from "../http/middleware/AuthMiddleware";
+
 import {
   BadRequestException,
   ConflictException,
   NotFoundException,
+  TooManyRequestException,
 } from "@fleeting/shared-exceptions";
 import { randomNumberString } from "@fleeting/shared-utils";
 export class AuthService {
@@ -25,8 +26,24 @@ export class AuthService {
     this.userRepository = userRepository;
     this.cache = cache;
   }
-
-  private async generateToken(userId: string, deviceId: string) {
+  async login(req:Request){
+    const {email, password, deviceId } = req.body;
+    const user = await this.userRepository.findByEmail(email);
+    if(!user){
+      throw new NotFoundException("Email does not exist.");
+    }
+    const typingWrongPasswordCacheKey = `${this.userRepository.cacheKey.limitIncorrectPasswordLogin}:${email}:${deviceId}`;
+    const countTyingIncorrectPassword = await this.cache.get("");
+      if(countTyingIncorrectPassword === 5){
+        throw new TooManyRequestException("You have entered the wrong password too many times, please enter again after 5 minutes");
+      }
+    if(await this.userRepository.comparePassword(password,user.password)){
+      return this.generateToken(user.id,deviceId || "deviceId");
+    }else{
+      this.cache.setex(typingWrongPasswordCacheKey,countTyingIncorrectPassword ? countTyingIncorrectPassword+1:1,5*60);
+    }
+  }
+  private async generateToken(userId: number, deviceId: string) {
     const accessTokenExpireIns = 60 * 60;
     const refreshTokenExpireIns = 7 * 24 * 60 * 60;
 
@@ -84,6 +101,10 @@ export class AuthService {
       JSON.stringify(correctVerificationCode) !==
       JSON.stringify(data.verificationCode)
     ) {
+      console.log(correctVerificationCode);
+      console.log(data.verificationCode);
+      
+      
       throw new BadRequestException("Invalid verification code.");
     }
 
@@ -108,14 +129,14 @@ export class AuthService {
       },
     });
     const deviceId = (req.body.deviceId as string) || "deviceId";
-    return await this.generateToken(identifiers[0].id as string, deviceId);
+    return await this.generateToken(identifiers[0].id as number, deviceId);
   }
-  async me(req: AuthenticatedRequest) {
-    const user = this.userRepository.findOneBy({ id: req.userId });
+  async me(req: Request):Promise<UserDto|null> {
 
+    const user = await this.userRepository.findOneBy({ id: (req as any)?.userId });
     if (!user) {
       throw new NotFoundException("User not found!");
     }
-    return new UserDto(user as any);
+    return new UserDto(user);
   }
 }

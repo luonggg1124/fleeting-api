@@ -1,7 +1,7 @@
 import { IProfile, ISettings, User } from "../entities/User";
 
 export class UserDto{
-    id: number|string;
+    id: number;
     username:string;
     email:string;
     fullName: string;
