@@ -3,7 +3,7 @@ export class BadGatewayException extends Error{
         super(message);
         this.name = "BadGatewayException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 502;
     }
 }

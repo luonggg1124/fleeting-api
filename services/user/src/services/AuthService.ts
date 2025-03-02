@@ -1,68 +1,58 @@
-import { ConflictException } from "../exceptions/ConflictException";
 import { UserRepository } from "../models/repositories/UserRepository";
 import jwt from "jsonwebtoken";
-import { randomNumberString } from "../utils/number";
+
 import sendVerificationCodeMail from "../mail/send-verification-code";
 import { CacheClient } from "../config/cache-client";
-import { BadRequestException } from "../exceptions/BadRequestException";
-import { QueryRunner } from "typeorm";
-import AppDataSource from "../config/data-source";
 import { Request } from "express";
-import { NotFoundException } from "../exceptions/NotFoundException";
+
 import { UserDto } from "../models/dto/UserDto";
+
+import { AuthenticatedRequest } from "../http/middleware/AuthMiddleware";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@fleeting/shared-exceptions";
+import { randomNumberString } from "@fleeting/shared-utils";
 export class AuthService {
   private userRepository: UserRepository;
   private cache;
-  private queryRunner: QueryRunner;
   constructor(
     userRepository: UserRepository = new UserRepository(),
 
-    cache: CacheClient = new CacheClient(),
-    queryRunner: QueryRunner = AppDataSource.createQueryRunner()
+    cache: CacheClient = new CacheClient()
   ) {
     this.userRepository = userRepository;
     this.cache = cache;
-    this.queryRunner = queryRunner;
   }
 
-  private async generateToken(
-    userId: string,
-    deviceId: string,
-    accessData = {
-      key: "access_token",
-      expiresIn: 15 * 60,
-    },
-    refreshData = {
-      key: "refresh_token",
-      expiresIn: 7 * 24 * 60 * 60,
-    }
-  ) {
+  private async generateToken(userId: string, deviceId: string) {
+    const accessTokenExpireIns = 60 * 60;
+    const refreshTokenExpireIns = 7 * 24 * 60 * 60;
+
     const accessToken = jwt.sign(
-      { userId },
+      { userId, deviceId },
       process.env.ACCESS_TOKEN_SECRET as string,
       {
-        expiresIn: accessData.expiresIn,
+        expiresIn: accessTokenExpireIns,
       }
     );
     const refreshToken = jwt.sign(
-      { userId },
+      { userId, deviceId },
       process.env.REFRESH_TOKEN_SECRET as string,
       {
-        expiresIn: "7d",
+        expiresIn: refreshTokenExpireIns,
       }
     );
-    await Promise.all([
-      this.cache.setex(
-        `${accessData.key}:${userId}:${deviceId}`,
-        accessToken,
-        accessData.expiresIn
-      ),
-      this.cache.setex(
-        `${refreshData.key}:${userId}:${deviceId}`,
+    try {
+      await this.cache.setex(
+        `refresh_token:${userId}:${deviceId}`,
         refreshToken,
-        refreshData.expiresIn
-      ),
-    ]);
+        refreshTokenExpireIns
+      );
+    } catch (error) {
+      throw error;
+    }
     return { accessToken, refreshToken };
   }
   async sendVerificationCode(req: Request): Promise<void> {
@@ -87,15 +77,15 @@ export class AuthService {
     if (await this.userRepository.emailExisted(data.email)) {
       throw new ConflictException("Email already exists.");
     }
-    // const correctVerificationCode = await this.cache.get(
-    //   `${userCacheKey.verificationCode}:${data.email}`
-    // );
-    // if (
-    //   JSON.stringify(correctVerificationCode) !==
-    //   JSON.stringify(data.verificationCode)
-    // ) {
-    //   throw new BadRequestException("Invalid verification code.");
-    // }
+    const correctVerificationCode = await this.cache.get(
+      `${userCacheKey.verificationCode}:${data.email}`
+    );
+    if (
+      JSON.stringify(correctVerificationCode) !==
+      JSON.stringify(data.verificationCode)
+    ) {
+      throw new BadRequestException("Invalid verification code.");
+    }
 
     const { identifiers } = await this.userRepository.insert({
       username: await this.userRepository.createUserName(
@@ -117,25 +107,15 @@ export class AuthService {
         theme: "light",
       },
     });
-    const deviceId = req.body.deviceId as string;
-    return await this.generateToken(
-      identifiers[0].id as string,
-      deviceId,
-      {
-        key: userCacheKey.accessToken,
-        expiresIn: 15 * 60,
-      },
-      {
-        key: userCacheKey.refreshToken,
-        expiresIn: 7 * 24 * 60 * 60,
-      }
-    );
+    const deviceId = (req.body.deviceId as string) || "deviceId";
+    return await this.generateToken(identifiers[0].id as string, deviceId);
   }
-  async me(req: Request) {
-    const user = (req as any).user;
+  async me(req: AuthenticatedRequest) {
+    const user = this.userRepository.findOneBy({ id: req.userId });
+
     if (!user) {
       throw new NotFoundException("User not found!");
     }
-    return new UserDto(user);
+    return new UserDto(user as any);
   }
 }

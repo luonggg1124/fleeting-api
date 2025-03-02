@@ -3,7 +3,7 @@ export class TooManyRequestException extends Error{
         super(message);
         this.name = "TooManyRequestException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 429;
     }
 }

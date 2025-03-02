@@ -3,7 +3,8 @@ export class NotFoundException extends Error{
         super(message);
         this.name = "NotFoundException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 404;
     }
+    
 }

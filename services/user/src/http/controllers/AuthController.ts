@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { AuthService } from "../../services/AuthService";
-import { ConflictException } from "../../exceptions/ConflictException";
+import ConflictException from "../../../../../package/exceptions/src/exceptions/ConflictException";
+import NotFoundException from "../../../../../package/exceptions/src/exceptions/NotFoundException";
 
 // arrowFunction luôn giữ this của class.
 // normalFunction bị mất this khi gọi trực tiếp.
@@ -12,17 +13,15 @@ class AuthController {
   }
   register = async (req: Request, res: Response): Promise<void> => {
     try {
-      
       const result = await this.authService.register(req);
       res.json({
-        user : result
+        user: result,
       });
       return;
     } catch (error: any) {
-      
-      if(error?.message){
+      if (error?.message) {
         res.status(500).json({
-          message: error.message
+          message: error.message,
         });
         return;
       }
@@ -61,6 +60,25 @@ class AuthController {
       }
       res.status(500).json({
         message: "Internal Server Error",
+      });
+      return;
+    }
+  };
+  me = async (req: Request, res: Response): Promise<void> => {
+    try {
+      res.json({
+        user: this.authService.me(req)
+      });
+      return
+    } catch (error: any) {
+      if (error instanceof NotFoundException) {
+        res.status(404).json({
+          message: error.message,
+        });
+        return;
+      }
+      res.status(500).json({
+        message: "Internal Server Error.",
       });
       return;
     }

@@ -3,7 +3,7 @@ export class ConflictException extends Error{
         super(message);
         this.name = "ConflictException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 400;
     }
 }

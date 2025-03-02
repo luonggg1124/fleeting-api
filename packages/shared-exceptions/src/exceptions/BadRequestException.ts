@@ -3,7 +3,7 @@ export class BadRequestException extends Error{
         super(message);
         this.name = "BadRequestException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 400;
     }
 }

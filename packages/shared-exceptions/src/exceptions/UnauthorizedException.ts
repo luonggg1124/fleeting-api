@@ -3,7 +3,7 @@ export class UnauthorizedException extends Error{
         super(message);
         this.name = "UnauthorizedException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 401;
     }
 }

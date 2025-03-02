@@ -23,8 +23,6 @@ export class UserRepository extends Repository<User> {
     return {
       emailExisted: "email_existed",
       verificationCode: "verification_code",
-      accessToken: "access_token",
-      refreshToken: "refresh_token",
     }
   }
   async emailExisted(email:string):Promise<boolean>{

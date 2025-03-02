@@ -2,8 +2,6 @@ import { MigrationInterface, QueryRunner, Table } from "typeorm";
 
 export class CreateUserTable1740041764861 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    
-    
     await queryRunner.createTable(
       new Table({
         name: "users",
@@ -32,10 +30,15 @@ export class CreateUserTable1740041764861 implements MigrationInterface {
     );
     // B-Tree(WHERE,JOIN,ORDER BY)
     await queryRunner.query(`CREATE INDEX idx_users_email ON users(email)`);
-    await queryRunner.query(`CREATE INDEX idx_users_username ON users(username)`);
-    await queryRunner.query(`CREATE INDEX idx_users_created_at_brin ON users USING BRIN(created_at)`);
-    await queryRunner.query(`CREATE INDEX idx_users_updated_at_brin ON users USING BRIN(updated_at)`);
-    
+    await queryRunner.query(
+      `CREATE INDEX idx_users_username ON users(username)`
+    );
+    await queryRunner.query(
+      `CREATE INDEX idx_users_created_at_brin ON users USING BRIN(created_at)`
+    );
+    await queryRunner.query(
+      `CREATE INDEX idx_users_updated_at_brin ON users USING BRIN(updated_at)`
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

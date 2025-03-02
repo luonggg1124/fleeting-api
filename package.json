@@ -1,0 +1,27 @@
+{
+  "name": "fleeting",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "pnpm run build -r",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write .",
+    "clean": "rimraf node_modules pnpm-lock.yaml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.2",
+    "rimraf": "^6.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
+  }
+}

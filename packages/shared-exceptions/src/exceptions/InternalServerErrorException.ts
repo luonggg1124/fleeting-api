@@ -3,7 +3,7 @@ export class InternalServerErrorException extends Error{
         super(message);
         this.name = "InternalServerErrorException";
     }
-    public getStatus():number|string {
+    getStatus():number|string {
         return 500;
     }
 }
