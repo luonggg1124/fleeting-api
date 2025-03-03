@@ -3,29 +3,30 @@ syntax = "proto3";
 package cache;
 
 service CacheService {
-    rpc GetCache (CacheRequest) returns (CacheResponse);
-    rpc SetCache (SetCacheRequest) returns (SetCacheResponse);
-    rpc DeleteCache (CacheRequest) returns (DeleteCacheResponse);
+    rpc Get (Request) returns (Response);
+    rpc Set (SetRequest) returns (Response);
+    rpc SetEX (SetExRequest) returns (Response);
+    rpc GetTTL (Request) returns (Response);
+    rpc Delete(Request) returns (Response);
+    rpc Incr (Request) returns (Response);
 }
 
-message CacheRequest {
+message Request {
     string key = 1;
 }
 
-message CacheResponse {
+message Response {
     string value = 1;
 }
 
-message SetCacheRequest {
+message SetRequest {
+  string key = 1;
+  string value = 2;
+}
+
+message SetEXRequest {
   string key = 1;
   string value = 2;
   int32 ttl = 3;
 }
 
-message SetCacheResponse {
-  string message = 1;
-}
-
-message DeleteCacheResponse {
-  string message = 1;
-}

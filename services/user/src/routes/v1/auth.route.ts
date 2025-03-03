@@ -10,6 +10,7 @@ import { loginRequest } from "../../http/requests/auth/LoginRequest";
 const authRoutes:Router = express.Router();
 
 authRoutes.post("/login",loginRequest,AuthController.login);
+authRoutes.delete("/logout",AuthMiddleware.validateToken,AuthController.logout);
 authRoutes.post("/verification-code",sendVerificationCodeRequest,AuthController.sendVerificationMail);
 authRoutes.post("/register",registerRequest,AuthController.register);
 authRoutes.get("/me",AuthMiddleware.validateToken,AuthController.me);

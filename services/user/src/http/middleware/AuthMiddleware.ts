@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import { CacheClient } from "../../config/cache-client";
+import { CacheClient } from "../../config";
 dotenv.config();
 export interface AuthenticatedRequest extends Request {
   userId?: any;

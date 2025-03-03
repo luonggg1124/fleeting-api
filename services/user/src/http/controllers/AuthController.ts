@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { AuthService } from "../../services/AuthService";
-import { ConflictException, NotFoundException } from "@fleeting/shared-exceptions";
-
+import {
+  ConflictException,
+  ForbiddenException,
+  NotFoundException,
+} from "@fleeting/shared-exceptions";
 
 // arrowFunction luôn giữ this của class.
 // normalFunction bị mất this khi gọi trực tiếp.
@@ -11,16 +14,27 @@ class AuthController {
   constructor(authService: AuthService = new AuthService()) {
     this.authService = authService;
   }
-  login = async(req:Request, res:Response) =>{
-      try {
-        
-      } catch (error:any) {
-        
+  login = async (req: Request, res: Response) => {
+    try {
+      const result = await this.authService.login(req,res);
+      res.json({ ...result });
+      return;
+    } catch (error: any) {
+      if (error instanceof NotFoundException) {
+        res.status(404).json({ message: error.message });
+        return;
       }
-  }
+      if (error instanceof ForbiddenException) {
+        res.status(403).json({ message: error.message });
+        return;
+      }
+      res.status(500).json({ message: "Internal Server Error" });
+      return;
+    }
+  };
   register = async (req: Request, res: Response): Promise<void> => {
     try {
-      const result = await this.authService.register(req);
+      const result = await this.authService.register(req,res);
       res.json({
         user: result,
       });
@@ -73,11 +87,9 @@ class AuthController {
   };
   me = async (req: Request, res: Response): Promise<void> => {
     try {
-      const user = this.authService.me(req);
-      console.log(user);
-      
+      const user = await this.authService.me(req);
       res.json({
-        user:user 
+        user: user,
       });
       return;
     } catch (error: any) {
@@ -93,6 +105,13 @@ class AuthController {
       return;
     }
   };
+  logout = async(req:Request,res:Response):Promise<void> => {
+    try {
+      
+    } catch (error:any) {
+      
+    }
+  }
 }
 
 export default new AuthController();

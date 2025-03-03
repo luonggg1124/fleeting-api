@@ -4,7 +4,7 @@ export class UserDto{
     id: number;
     username:string;
     email:string;
-    fullName: string;
+    full_name: string;
     is_verified?:boolean;
     is_banned?: boolean;
     settings: ISettings;
@@ -15,7 +15,7 @@ export class UserDto{
         this.id = user.id;
         this.username = user.username;
         this.email = user.email;
-        this.fullName = user.full_name;
+        this.full_name = user.full_name;
         this.is_verified = user.is_verified;
         this.is_banned = user.is_banned;
         this.settings = user.settings;

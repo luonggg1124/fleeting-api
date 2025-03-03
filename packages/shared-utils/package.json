@@ -1,5 +1,5 @@
 {
-  "name": "@fleeting/shared-utils",
+  "name": "@packages/shared-utils",
   "version": "1.0.0",
   "main": "src/index.ts",
   "scripts": {

@@ -2,7 +2,7 @@ import { Router } from "express";
 import { createProxyMiddleware } from "http-proxy-middleware";
 import dotenv from "dotenv";
 dotenv.config();
-const router = Router();
+const router:Router = Router();
 
 router.use(
     "/",

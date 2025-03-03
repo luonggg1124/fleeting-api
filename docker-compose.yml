@@ -2,7 +2,7 @@ services:
   api-gateway:
     container_name: api-gateway
     build:
-      context: ./api-gateway
+      context: .
       dockerfile: Dockerfile
     ports:
       - "4000:4000"
@@ -15,25 +15,27 @@ services:
         condition: service_started
       notification-service: 
         condition: service_started
-    restart: always
+    #restart: always
     volumes:
-      - ./api-gateway:/app
+      - ./services/mail:/app/api-gateway
       - /app/node_modules
       - /app/dist
+      - ./proto:/app/proto
     networks:
       - app-network
   user-service:
     container_name: user-service
     build:
-      context: ./services/user
+      context: .
       dockerfile: Dockerfile
     ports:
       - "4006:4001"
-    restart: always
+    #restart: always
     volumes:
       - ./services/user:/app
       - /app/node_modules
       - /app/dist
+      - ./proto:/app/proto
     env_file:
       - ./services/user/.env
     depends_on:
@@ -43,17 +45,18 @@ services:
   notification-service:
     container_name: notification-service
     build:
-      context: ./services/notification
+      context: .
       dockerfile: Dockerfile
     ports:
       - "4007:4002"
     env_file:
       - ./services/notification/.env
-    restart: always
+    #restart: always
     volumes:
-      - ./services/notification:/app
+      - ./services/mail:/app/services/notification
       - /app/node_modules
       - /app/dist
+      - ./proto:/app/proto
     networks:
       - app-network
   chat-service:
@@ -65,24 +68,26 @@ services:
       - "4008:4003"
     env_file:
       - ./services/chat/.env
-    restart: always
+    #restart: always
     volumes:
-      - ./services/chat:/app
+      - .:/app
       - /app/node_modules
       - /app/dist
+      - ./proto:/app/proto
     networks:
       - app-network
   cache-service: 
     container_name: cache-service
     build: 
-      context: ./services/cache
+      context: .
       dockerfile: Dockerfile
     env_file:
       - ./services/cache/.env
     volumes:
-      - ./services/cache:/app
+      - ./services/mail:/app/services/cache
       - /app/node_modules
       - /app/dist
+      - ./proto:/app/proto
     ports:
       - "50051:50051"
     networks:
@@ -90,14 +95,15 @@ services:
   mail-service: 
     container_name: mail-service
     build: 
-      context: ./services/mail
+      context: .
       dockerfile: Dockerfile
     env_file:
       - ./services/mail/.env
     volumes:
-      - ./services/mail:/app
+      - ./services/mail:/app/services/mail
       - /app/node_modules
       - /app/dist
+      - ./proto:/app/proto
     networks:
       - app-network
   redis:

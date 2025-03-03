@@ -2,15 +2,15 @@ import { UserRepository } from "../models/repositories/UserRepository";
 import jwt from "jsonwebtoken";
 
 import sendVerificationCodeMail from "../mail/send-verification-code";
-import { CacheClient } from "../config/cache-client";
-import { Request } from "express";
+import { CacheClient } from "../config";
+import { Request, Response } from "express";
 
 import { UserDto } from "../models/dto/UserDto";
-
 
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   TooManyRequestException,
 } from "@fleeting/shared-exceptions";
@@ -26,27 +26,46 @@ export class AuthService {
     this.userRepository = userRepository;
     this.cache = cache;
   }
-  async login(req:Request){
-    const {email, password, deviceId } = req.body;
+  async login(req: Request, res: Response) {
+    const { email, password, deviceId } = req.body;
     const user = await this.userRepository.findByEmail(email);
-    if(!user){
+    if (!user) {
       throw new NotFoundException("Email does not exist.");
     }
     const typingWrongPasswordCacheKey = `${this.userRepository.cacheKey.limitIncorrectPasswordLogin}:${email}:${deviceId}`;
-    const countTyingIncorrectPassword = await this.cache.get("");
-      if(countTyingIncorrectPassword === 5){
-        throw new TooManyRequestException("You have entered the wrong password too many times, please enter again after 5 minutes");
+    const countTyingIncorrectPassword = await this.cache.get("count_typing_incorrect_password");
+    if (countTyingIncorrectPassword === 5) {
+      throw new TooManyRequestException(
+        "You have entered the wrong password too many times, please enter again after 5 minutes"
+      );
+    }
+    if (await this.userRepository.comparePassword(password, user.password)) {
+      if (user.is_banned) {
+        throw new ForbiddenException("The account has been banned!");
       }
-    if(await this.userRepository.comparePassword(password,user.password)){
-      return this.generateToken(user.id,deviceId || "deviceId");
-    }else{
-      this.cache.setex(typingWrongPasswordCacheKey,countTyingIncorrectPassword ? countTyingIncorrectPassword+1:1,5*60);
+      const token = await this.generateToken(user.id, deviceId || "deviceId");
+      res.cookie("access_token", process.env.ACCESS_TOKEN_SECRET, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: token.accessTokenExpireIns,
+      });
+      return {
+        ...token,
+        user: new UserDto(user),
+      };
+    } else {
+      this.cache.setex(
+        typingWrongPasswordCacheKey,
+        countTyingIncorrectPassword ? countTyingIncorrectPassword + 1 : 1,
+        5 * 60
+      );
     }
   }
   private async generateToken(userId: number, deviceId: string) {
     const accessTokenExpireIns = 60 * 60;
     const refreshTokenExpireIns = 7 * 24 * 60 * 60;
-
+    const tokenType = "bearer";
     const accessToken = jwt.sign(
       { userId, deviceId },
       process.env.ACCESS_TOKEN_SECRET as string,
@@ -70,7 +89,13 @@ export class AuthService {
     } catch (error) {
       throw error;
     }
-    return { accessToken, refreshToken };
+    return {
+      accessToken,
+      refreshToken,
+      accessTokenExpireIns,
+      refreshTokenExpireIns,
+      tokenType,
+    };
   }
   async sendVerificationCode(req: Request): Promise<void> {
     const email = req.body.email as string;
@@ -87,7 +112,7 @@ export class AuthService {
     );
     sendVerificationCodeMail(code, email);
   }
-  async register(req: Request) {
+  async register(req: Request, res: Response) {
     const data = req.body;
     const userCacheKey = this.userRepository.cacheKey;
 
@@ -101,10 +126,6 @@ export class AuthService {
       JSON.stringify(correctVerificationCode) !==
       JSON.stringify(data.verificationCode)
     ) {
-      console.log(correctVerificationCode);
-      console.log(data.verificationCode);
-      
-      
       throw new BadRequestException("Invalid verification code.");
     }
 
@@ -129,14 +150,33 @@ export class AuthService {
       },
     });
     const deviceId = (req.body.deviceId as string) || "deviceId";
-    return await this.generateToken(identifiers[0].id as number, deviceId);
-  }
-  async me(req: Request):Promise<UserDto|null> {
 
-    const user = await this.userRepository.findOneBy({ id: (req as any)?.userId });
+    const token = await this.generateToken(
+      identifiers[0].id as number,
+      deviceId
+    );
+    res.cookie("access_token", process.env.ACCESS_TOKEN_SECRET, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      maxAge: token.accessTokenExpireIns,
+    });
+    return token;
+  }
+  async me(req: Request): Promise<UserDto | null> {
+    const user = await this.userRepository.findOneBy({
+      id: (req as any)?.userId,
+    });
     if (!user) {
       throw new NotFoundException("User not found!");
     }
-    return new UserDto(user);
+    const data = new UserDto(user);
+    return data;
+  }
+
+  async logout(req: Request): Promise<void> {
+    const userId = (req as any).userId;
+    if (!userId) {
+    }
   }
 }

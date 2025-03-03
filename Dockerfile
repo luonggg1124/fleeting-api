@@ -4,7 +4,7 @@ WORKDIR /app
 
 RUN npm install -g pnpm@10.2.1
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml tsconfig.base.json ./
 
 RUN pnpm install
 
@@ -12,5 +12,5 @@ COPY . .
 
 RUN ls -al tsconfig.base.json
 
-RUN pnpm tsc
+
 
