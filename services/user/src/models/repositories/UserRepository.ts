@@ -2,8 +2,8 @@ import { EntityManager, Repository } from "typeorm";
 import bcrypt from "bcryptjs";
 import { User } from "../entities/User";
 import AppDataSource from "../../config/data-source";
-import { CacheClient } from "../../config";
-import { lowercaseString, randomNumberString, randomString } from "@fleeting/shared-utils";
+import { CacheClient } from "@packages/cache-client";
+import { lowercaseString, randomNumberString, randomString } from "@packages/shared-utils";
 
 
 

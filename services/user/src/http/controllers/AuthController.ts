@@ -4,7 +4,7 @@ import {
   ConflictException,
   ForbiddenException,
   NotFoundException,
-} from "@fleeting/shared-exceptions";
+} from "@packages/shared-exceptions";
 
 // arrowFunction luôn giữ this của class.
 // normalFunction bị mất this khi gọi trực tiếp.

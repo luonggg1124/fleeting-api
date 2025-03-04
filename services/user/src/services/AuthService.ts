@@ -2,7 +2,7 @@ import { UserRepository } from "../models/repositories/UserRepository";
 import jwt from "jsonwebtoken";
 
 import sendVerificationCodeMail from "../mail/send-verification-code";
-import { CacheClient } from "../config";
+
 import { Request, Response } from "express";
 
 import { UserDto } from "../models/dto/UserDto";
@@ -13,8 +13,9 @@ import {
   ForbiddenException,
   NotFoundException,
   TooManyRequestException,
-} from "@fleeting/shared-exceptions";
-import { randomNumberString } from "@fleeting/shared-utils";
+} from "@packages/shared-exceptions";
+import { randomNumberString } from "@packages/shared-utils";
+import { CacheClient } from "@packages/cache-client";
 export class AuthService {
   private userRepository: UserRepository;
   private cache;
