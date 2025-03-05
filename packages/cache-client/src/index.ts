@@ -1,4 +1,3 @@
-import path from "path";
 import * as grpc from "@grpc/grpc-js";
 import * as protoLoader from "@grpc/proto-loader";
 import dotenv from "dotenv";
@@ -24,23 +23,19 @@ interface CacheProto extends grpc.ServiceDefinition {
 }
 const cacheProto: any = grpc.loadPackageDefinition(
   packageDefinition
-) as unknown as {
-  cache: {
-    CacheService: grpc.ServiceClientConstructor;
-  };
-};
+).cache;
 
 export class CacheClient {
   private client: InstanceType<typeof cacheProto.cache.CacheService>;
   constructor() {
     this.client = new cacheProto.CacheService(
-      process.env.CACHE_SERVER_URL,
+      process.env.CACHE_SERVER_URL === 'docker' ?'cache-service:50051' : 'localhost:50051',
       grpc.credentials.createInsecure()
     );
   }
   async get(key: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.client.Get({ key: key }, (error: any, response: any) => {
+      this.client.Get({  key }, (error: any, response: any) => {
         if (error) return reject(error);
         resolve(response.value ? JSON.parse(response.value) : null);
       });
@@ -49,7 +44,7 @@ export class CacheClient {
   async set(key: string, data: any): Promise<void> {
     return new Promise((resolve, reject) => {
       this.client.Set(
-        { key: key, value: JSON.stringify(data) },
+        {  key, value: JSON.stringify(data) },
         (error: any) => {
           if (error) return reject(error);
           resolve();
@@ -60,7 +55,7 @@ export class CacheClient {
   async setex(key: string, data: any, ttl: number = 300): Promise<void> {
     return new Promise((resolve, reject) => {
       this.client.SetEX(
-        { key: key, value: JSON.stringify(data), ttl },
+        {  key, value: JSON.stringify(data), ttl },
         (error: any, _: any) => {
           if (error) return reject(error);
           resolve();
@@ -70,7 +65,7 @@ export class CacheClient {
   }
   async ttl(key: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      this.client.GetTTL({ key: key }, (error: any, response: any) => {
+      this.client.GetTTL({  key }, (error: any, response: any) => {
         if (error) return reject(error);
         resolve(response.value);
       });
@@ -78,7 +73,7 @@ export class CacheClient {
   }
   async del(key: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.client.Delete({ key: key }, (error: any) => {
+      this.client.Delete({  key }, (error: any) => {
         if (error) return reject(error);
         resolve();
       });
@@ -86,9 +81,17 @@ export class CacheClient {
   }
   async incr(key: string): Promise<number> {
     return new Promise((resolve, reject) => {
-      this.client.Incr({ key: key }, (error: any, response: any) => {
+      this.client.Incr({  key }, (error: any, response: any) => {
         if (error) return reject(error);
         resolve(response.value);
+      });
+    });
+  }
+  async expire (key:string,ttl:number,mode?: "NX"|"XX"|"GT"|"LT",callback?: any):Promise<void>{
+    return new Promise((resolve, reject) => {
+      this.client.Expire({  key, ttl, mode,callback }, (error: any) => {
+        if (error) return reject(error);
+        resolve();
       });
     });
   }

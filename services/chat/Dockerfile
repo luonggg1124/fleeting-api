@@ -1,11 +1,9 @@
-FROM python:3.14.0a5-bookworm
+FROM python:3.14.0a5-bookworm AS builder
 
 WORKDIR /app
 
 
-# COPY . .
-
-# RUN ls -al tsconfig.json
+COPY . .
 
 # RUN pip install -r requirements.txt
 

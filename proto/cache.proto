@@ -5,14 +5,15 @@ package cache;
 service CacheService {
     rpc Get (Request) returns (Response);
     rpc Set (SetRequest) returns (Response);
-    rpc SetEX (SetExRequest) returns (Response);
+    rpc SetEX (SetEXRequest) returns (Response);
     rpc GetTTL (Request) returns (Response);
     rpc Delete(Request) returns (Response);
     rpc Incr (Request) returns (Response);
+    rpc Expire (Request) returns (Response);
 }
 
 message Request {
-    string key = 1;
+  required string key = 1;
 }
 
 message Response {
@@ -20,13 +21,21 @@ message Response {
 }
 
 message SetRequest {
-  string key = 1;
-  string value = 2;
+  required string key = 1;
+  required string value = 2;
 }
 
 message SetEXRequest {
-  string key = 1;
-  string value = 2;
-  int32 ttl = 3;
+  required string key = 1;
+  required string value = 2;
+  required int32 ttl = 3;
 }
+
+message ExpireRequest {
+  required string key = 1;
+  required int32 ttl = 2;
+  optional string mode = 3;
+  optional callback = 4;
+}
+
 

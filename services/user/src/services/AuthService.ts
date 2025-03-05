@@ -34,7 +34,7 @@ export class AuthService {
       throw new NotFoundException("Email does not exist.");
     }
     const typingWrongPasswordCacheKey = `${this.userRepository.cacheKey.limitIncorrectPasswordLogin}:${email}:${deviceId}`;
-    const countTyingIncorrectPassword = await this.cache.get("count_typing_incorrect_password");
+    const countTyingIncorrectPassword = await this.cache.get(typingWrongPasswordCacheKey);
     if (countTyingIncorrectPassword === 5) {
       throw new TooManyRequestException(
         "You have entered the wrong password too many times, please enter again after 5 minutes"
@@ -45,7 +45,7 @@ export class AuthService {
         throw new ForbiddenException("The account has been banned!");
       }
       const token = await this.generateToken(user.id, deviceId || "deviceId");
-      res.cookie("access_token", process.env.ACCESS_TOKEN_SECRET, {
+      res.cookie(`access_token:${user.id}:${deviceId}`, process.env.ACCESS_TOKEN_SECRET, {
         httpOnly: true,
         secure: true,
         sameSite: "strict",
@@ -56,11 +56,9 @@ export class AuthService {
         user: new UserDto(user),
       };
     } else {
-      this.cache.setex(
-        typingWrongPasswordCacheKey,
-        countTyingIncorrectPassword ? countTyingIncorrectPassword + 1 : 1,
-        5 * 60
-      );
+      this.cache.incr(typingWrongPasswordCacheKey);
+      this.cache.expire(typingWrongPasswordCacheKey,5*60)
+      throw new BadRequestException("Wrong password!");
     }
   }
   private async generateToken(userId: number, deviceId: string) {

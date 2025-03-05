@@ -1,9 +1,11 @@
 import { Request, Response } from "express";
 import { AuthService } from "../../services/AuthService";
 import {
+  BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
+  TooManyRequestException,
 } from "@packages/shared-exceptions";
 
 // arrowFunction luôn giữ this của class.
@@ -26,6 +28,16 @@ class AuthController {
       }
       if (error instanceof ForbiddenException) {
         res.status(403).json({ message: error.message });
+        return;
+      }
+      if(error instanceof TooManyRequestException){
+        res.status(429).json({ message: error.message });
+        return;
+      }
+      if(error instanceof BadRequestException){
+        res.status(400).json({
+          message: error.message,
+        });
         return;
       }
       res.status(500).json({ message: "Internal Server Error" });

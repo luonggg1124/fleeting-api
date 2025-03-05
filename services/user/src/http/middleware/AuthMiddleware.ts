@@ -24,13 +24,17 @@ class AuthMiddleware {
         });
         return;
       }
-      
       try {
         const decoded = jwt.verify(
           token,
           process.env.ACCESS_TOKEN_SECRET || ("" as string)
         );
-        
+        const access_token = req.cookies[`access_token:${(decoded as any).userId}:${(req as any).deviceId || "deviceId"}`];
+        if(access_token !== token){
+          res.status(401).json({
+            message: "Unauthorized, token is invalid",
+          });
+        }
         req.userId = (decoded as any).userId;
       } catch (error: any) {
         if (error.name === "TokenExpiredError") {

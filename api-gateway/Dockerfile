@@ -1,20 +1,15 @@
-FROM node:23.7.0
+FROM node:23.7.0 AS builder
+
+
+# RUN pnpm install --frozen-lockfile
 
 WORKDIR /app
 
-RUN npm install -g pnpm@10.2.1
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+WORKDIR /app/api-gateway
 
 
-
-COPY package.json pnpm-lock.yaml ./
-
-
-RUN pnpm install
-
-
-COPY . .
-
-RUN ls -al tsconfig.json
 
 RUN pnpm tsc
 
