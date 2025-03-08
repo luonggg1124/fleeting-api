@@ -1,0 +1,17 @@
+{
+  "name": "@packages/shared-exceptions",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "pnpm build"
+  },
+  "author": "louis-ng",
+  "license": "ISC",
+  "exports": {
+    ".":"./src/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2"
+  }
+}

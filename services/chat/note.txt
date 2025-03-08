@@ -1,0 +1,2 @@
+python -m venv venv
+pip install fastapi uvicorn pymongo motor websockets grpcio grpcio-tools protobuf python-jose

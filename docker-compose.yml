@@ -1,0 +1,175 @@
+version: '3.8'
+
+services:
+  # 🔹 API Gateway
+  # api-gateway:
+  #   container_name: api-gateway
+  #   build:
+  #     context: .
+  #     target: api-gateway
+  #   ports:
+  #     - "4000:4000"
+  #   env_file:
+  #     - ./api-gateway/.env
+  #   volumes:
+  #     - ./api-gateway:/app
+  #     - /app/node_modules
+  #     - ./proto:/app/proto
+  #   networks:
+  #     - app-network
+
+  # # 🔹 User Service
+  # user-service:
+  #   container_name: user-service
+  #   build:
+  #     context: .
+  #     target: user-service
+  #   ports:
+  #     - "4006:4001"
+  #   volumes:
+  #     - ./services/user:/app
+  #     - /app/node_modules
+  #     - ./proto:/app/proto
+  #   env_file:
+  #     - ./services/user/.env
+  #   networks:
+  #     - app-network
+
+  # # 🔹 Notification Service
+  # notification-service:
+  #   container_name: notification-service
+  #   build:
+  #     context: ./services/notification
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "4007:4002"
+  #   volumes:
+  #     - ./services/notification:/app
+  #     - /app/node_modules
+  #     - ./proto:/app/proto
+  #   env_file:
+  #     - ./services/notification/.env
+  #   networks:
+  #     - app-network
+
+  # # 🔹 Chat Service
+  # chat-service:
+  #   container_name: chat-service
+  #   build:
+  #     context: ./services/chat
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "4008:4003"
+  #   env_file:
+  #     - ./services/chat/.env
+  #   volumes:
+  #     - ./services/chat:/app
+  #     - /app/node_modules
+  #     - ./proto:/app/proto
+  #   networks:
+  #     - app-network
+
+  # # 🔹 Cache Service
+  # cache-service: 
+  #   container_name: cache-service
+  #   build: 
+  #     context: .
+  #     target: cache-service
+  #   env_file:
+  #     - ./services/cache/.env
+  #   volumes:
+  #     - ./services/cache:/app
+  #     - /app/node_modules
+  #     - ./proto:/app/proto
+  #   ports:
+  #     - "50051:50051"
+  #   networks:
+  #     - app-network
+
+  # # 🔹 Mail Service
+  # mail-service: 
+  #   container_name: mail-service
+  #   build: 
+  #     context: .
+  #     target: mail-service
+  #   env_file:
+  #     - ./services/mail/.env
+  #   volumes:
+  #     - ./services/mail:/app
+  #     - /app/node_modules
+  #     - ./proto:/app/proto
+  #   networks:
+  #     - app-network
+
+  # 🔹 Redis
+  redis:
+    image: redis:7.4.2
+    container_name: redis
+    restart: always
+    env_file:
+      - ./environments/redis/.env
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  # 🔹 Redis Commander (Web UI)
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    env_file:
+      - ./environments/redis/commander/.env
+    ports:
+      - "8082:8081"
+    networks:
+      - app-network
+
+  # 🔹 PostgreSQL Database
+  postgres_db:
+    image: postgres:17.2
+    container_name: postgres_db
+    restart: always
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "root"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - ./environments/postgres/.env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/postgres.sql:/docker-entrypoint-initdb.d/postgres.sql
+    networks:
+      - app-network
+
+  # 🔹 PG Admin (Web UI)
+  pg_admin:
+    image: dpage/pgadmin4
+    container_name: pg_admin
+    restart: always
+    env_file:
+      - ./environments/postgres/admin/.env
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres_db:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+
